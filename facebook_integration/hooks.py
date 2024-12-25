@@ -245,3 +245,9 @@ app_license = "mit"
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
 
+doc_events = {
+    "Facebook Post": {
+        "on_submit": "facebook_integration.facebook_integration.doctype.facebook_post.facebook_post.publish_to_facebook"
+    }
+}
+
