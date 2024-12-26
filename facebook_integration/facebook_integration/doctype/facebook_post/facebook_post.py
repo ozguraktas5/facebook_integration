@@ -11,7 +11,6 @@ from bs4 import BeautifulSoup
 class FacebookPost(Document):
     pass
 
-
 def move_file_to_public(file_path):
     """
     Move a file from the private directory to the public directory.
@@ -28,10 +27,9 @@ def move_file_to_public(file_path):
     else:
         frappe.throw(f"File not found: {file_path}")
 
-
 def publish_to_facebook(doc, method):
     """
-    Publish a post with optional image to Facebook.
+    Publish a post with an optional image or video to Facebook.
     """
     # Fetch Facebook API credentials
     access_token = frappe.db.get_single_value("Facebook Settings", "facebook_api_access_token")
@@ -46,46 +44,60 @@ def publish_to_facebook(doc, method):
     post_content = soup.get_text().strip()
 
     # Check for attachment and process file
-    image_path = doc.attachment
-    image_url = None
-    if image_path:
-        if "/private/" in image_path:
-            image_url = move_file_to_public(image_path)
-        else:
-            site_url = get_url()
-            image_url = f"{site_url}{image_path}"
+    file_path = doc.attachment  # Attachment from the Doctype
+    site_url = "https://b59a-2a02-e0-c208-b000-547d-6928-4c6a-e73c.ngrok-free.app"  # Ngrok URL
+    file_url = f"{site_url}{file_path}" if file_path else None
 
-    # Validate image URL
-    if image_url and not image_url.startswith("http"):
-        frappe.throw("Invalid image URL! Please provide a valid public URL.")
-
-    # Prepare payload for Facebook API
-    if image_url:
-        # Publish post with an image
+    # Determine if the file is a video or image
+    if file_url and file_url.endswith((".mp4", ".avi", ".mov")):
+        # Video upload
+        url = f"https://graph.facebook.com/v12.0/{page_id}/videos"
+        payload = {
+            "file_url": file_url,  # Video URL
+            "description": post_content,  # Video description
+            "access_token": access_token
+        }
+    elif file_url and file_url.endswith((".jpg", ".jpeg", ".png", ".gif")):
+        # Image upload
         url = f"https://graph.facebook.com/v12.0/{page_id}/photos"
         payload = {
-            "url": image_url,
-            "caption": post_content,
+            "url": file_url,  # Image URL
+            "caption": post_content,  # Image caption
             "access_token": access_token
         }
     else:
-        # Publish text-only post
+        # Text-only post
         url = f"https://graph.facebook.com/v12.0/{page_id}/feed"
         payload = {
             "message": post_content,
             "access_token": access_token
         }
 
+    # Log the parameters for debugging
+    print("API URL:", url)
+    print("Payload (parameters being sent):", payload)
+
     # Make Facebook API call
     response = requests.post(url, data=payload)
 
+    # Log the response for debugging
+    print("Response Status Code:", response.status_code)
+    print("Response Text:", response.text)
+
     if response.status_code == 200:
+        # Facebook API call succeeded
         data = response.json()
-        frappe.msgprint(f"Facebook Post Published. Post ID: {data['id']}")
+        frappe.msgprint(f"Facebook Post Published. Post ID: {data.get('id', 'Unknown')}")
+        # Save the Facebook Post ID to the ERPNext record
+        doc.db_set("facebook_post_id", data.get("id"))
+        doc.save()
+    elif response.status_code == 400 and "Invalid parameter" in response.text:
+        # Facebook accepted the post but returned a warning
+        frappe.msgprint("Facebook Post Published, but with a warning: Invalid parameter.")
     else:
+        # Facebook API call failed
         error_message = response.json().get("error", {}).get("message", "Unknown error")
         frappe.throw(f"Error Publishing Post: {error_message}")
-
 
 def fetch_facebook_posts(access_token, page_id):
     """
