@@ -27,6 +27,23 @@ def move_file_to_public(file_path):
     else:
         frappe.throw(f"File not found: {file_path}")
 
+def get_dynamic_ngrok_url():
+    """
+    Fetch the current public forwarding URL from the ngrok API.
+    """
+    ngrok_api_url = "http://127.0.0.1:4040/api/tunnels"  # Default ngrok API endpoint for local machine
+    try:
+        response = requests.get(ngrok_api_url)
+        response.raise_for_status()
+        tunnels = response.json().get("tunnels", [])
+        for tunnel in tunnels:
+            if tunnel.get("proto") == "https":  # Look for the HTTPS tunnel
+                return tunnel.get("public_url")
+        frappe.throw("No HTTPS ngrok URL found. Make sure ngrok is running.")
+    except requests.exceptions.RequestException as e:
+        frappe.throw(f"Failed to fetch ngrok URL: {str(e)}")
+
+
 def publish_to_facebook(doc, method):
     """
     Publish a post with an optional image or video to Facebook.
@@ -43,9 +60,11 @@ def publish_to_facebook(doc, method):
     soup = BeautifulSoup(html_content, "html.parser")
     post_content = soup.get_text().strip()
 
+    # Get dynamic ngrok URL
+    site_url = get_dynamic_ngrok_url()
+
     # Check for attachment and process file
     file_path = doc.attachment  # Attachment from the Doctype
-    site_url = "https://b59a-2a02-e0-c208-b000-547d-6928-4c6a-e73c.ngrok-free.app"  # Ngrok URL
     file_url = f"{site_url}{file_path}" if file_path else None
 
     # Determine if the file is a video or image
@@ -73,31 +92,44 @@ def publish_to_facebook(doc, method):
             "access_token": access_token
         }
 
-    # Log the parameters for debugging
-    print("API URL:", url)
-    print("Payload (parameters being sent):", payload)
-
     # Make Facebook API call
     response = requests.post(url, data=payload)
 
-    # Log the response for debugging
-    print("Response Status Code:", response.status_code)
-    print("Response Text:", response.text)
-
     if response.status_code == 200:
-        # Facebook API call succeeded
         data = response.json()
         frappe.msgprint(f"Facebook Post Published. Post ID: {data.get('id', 'Unknown')}")
-        # Save the Facebook Post ID to the ERPNext record
         doc.db_set("facebook_post_id", data.get("id"))
-        doc.save()
-    elif response.status_code == 400 and "Invalid parameter" in response.text:
-        # Facebook accepted the post but returned a warning
-        frappe.msgprint("Facebook Post Published, but with a warning: Invalid parameter.")
+        doc.db_set("status", "Published")
     else:
-        # Facebook API call failed
         error_message = response.json().get("error", {}).get("message", "Unknown error")
+        frappe.log_error(message=f"Facebook API Error: {error_message}", title="Facebook API Error")
         frappe.throw(f"Error Publishing Post: {error_message}")
+
+@frappe.whitelist()
+def delete_facebook_post(facebook_post_id):
+    """
+    Delete a post from Facebook using the Graph API.
+    """
+    # Fetch Facebook API credentials
+    access_token = frappe.db.get_single_value("Facebook Settings", "facebook_api_access_token")
+
+    if not access_token:
+        frappe.throw("Facebook API credentials are missing!")
+
+    # Facebook Graph API endpoint for deleting a post
+    url = f"https://graph.facebook.com/v12.0/{facebook_post_id}"
+
+    # Make the DELETE request to Facebook API
+    response = requests.delete(url, params={"access_token": access_token})
+
+    if response.status_code == 200:
+        frappe.msgprint("Post deleted successfully!")
+        return "success"
+    else:
+        error_message = response.json().get("error", {}).get("message", "Unknown error")
+        frappe.log_error(message=f"Facebook API Error: {error_message}", title="Facebook API Error")
+        frappe.throw(f"Error Deleting Post: {error_message}")
+
 
 def fetch_facebook_posts(access_token, page_id):
     """

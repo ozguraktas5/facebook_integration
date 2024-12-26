@@ -6,14 +6,11 @@
  "engine": "InnoDB",
  "field_order": [
   "post_title",
-  "post_content",
-  "post_date",
   "status",
-  "platform",
+  "post_date",
+  "post_content",
   "column_break_mwhc",
-  "likes",
-  "comments",
-  "shares",
+  "platform",
   "facebook_post_id",
   "amended_from",
   "attachment"
@@ -38,7 +35,7 @@
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "Status",
-   "options": "\nPlanned\nPublished\nCanceled"
+   "options": "\nDraft\nPublished\nDeleted"
   },
   {
    "fieldname": "platform",
@@ -47,28 +44,14 @@
    "options": "\nFacebook"
   },
   {
-   "fieldname": "likes",
-   "fieldtype": "Int",
-   "label": "Likes"
-  },
-  {
    "fieldname": "column_break_mwhc",
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "comments",
-   "fieldtype": "Int",
-   "label": "Comments"
-  },
-  {
-   "fieldname": "shares",
-   "fieldtype": "Int",
-   "label": "Shares"
-  },
-  {
    "fieldname": "facebook_post_id",
    "fieldtype": "Data",
-   "label": "Facebook Post ID"
+   "label": "Facebook Post ID",
+   "read_only": 1
   },
   {
    "fieldname": "amended_from",
@@ -87,9 +70,8 @@
   }
  ],
  "index_web_pages_for_search": 1,
- "is_submittable": 1,
  "links": [],
- "modified": "2024-12-25 19:55:25.117845",
+ "modified": "2024-12-26 19:41:39.989021",
  "modified_by": "Administrator",
  "module": "Facebook Integration",
  "name": "Facebook Post",

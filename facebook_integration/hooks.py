@@ -247,7 +247,7 @@ app_license = "mit"
 
 doc_events = {
     "Facebook Post": {
-        "on_submit": "facebook_integration.facebook_integration.doctype.facebook_post.facebook_post.publish_to_facebook"
+        "after_insert": "facebook_integration.facebook_integration.doctype.facebook_post.facebook_post.publish_to_facebook"
     }
 }
 
