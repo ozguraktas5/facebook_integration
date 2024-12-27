@@ -4,6 +4,8 @@
 import os
 import requests
 import frappe
+from frappe import _
+from frappe.utils.response import Response
 from frappe.model.document import Document
 from frappe.utils import get_url
 from bs4 import BeautifulSoup
@@ -155,3 +157,58 @@ def fetch_facebook_posts(access_token, page_id):
     else:
         error_message = response.json().get("error", {}).get("message", "Unknown error")
         frappe.throw(f"Error Fetching Posts: {error_message}")
+
+@frappe.whitelist(allow_guest=True)
+def facebook_webhook_handler():
+    """
+    Handle Facebook Webhook events and save data to ERPNext.
+    """
+    if frappe.request.method == "POST":
+        # Get the data sent by Facebook
+        data = frappe.local.form_dict
+
+        # Log the data for debugging
+        frappe.log_error(message=data, title="Facebook Webhook Event")
+
+        # Process likes (if they exist in the event)
+        if "entry" in data:
+            for entry in data["entry"]:
+                if "changes" in entry:
+                    for change in entry["changes"]:
+                        if change.get("field") == "likes":
+                            # Extract like details
+                            post_id = change.get("value", {}).get("post_id")
+                            like_count = change.get("value", {}).get("like_count")
+
+                            if post_id and like_count is not None:
+                                # Update the Facebook Post in ERPNext
+                                update_like_count(post_id, like_count)
+
+        # Return a 200 OK response to Facebook
+        return Response("Event received", status=200, mimetype="text/plain")
+
+    # Handle GET requests for verification
+    if frappe.request.method == "GET":
+        verify_token = "EAAR3ax0DANEBOzsSckzuqp0kGx8WpsrbXZAp74AyGPuRXmJRK9b2noiAr4HYMfDM6z09fR3elN2Xx7ZAOOJEu3FAeZBP1TI1BPnrWB4LstkZC3ldnv6RKvwuGyBbVD63GmcI1EcBBxakhe94o26gkDshZAZBLjURP4JKeatHGWGq8jnico4tNrgpi9Uqt6LwZDZD"  # Same token you set in Facebook settings
+        mode = frappe.form_dict.get("hub.mode")
+        token = frappe.form_dict.get("hub.verify_token")
+        challenge = frappe.form_dict.get("hub.challenge")
+
+        if mode == "subscribe" and token == verify_token:
+            return Response(challenge, status=200, mimetype="text/plain")
+
+    return Response("Not Found", status=404, mimetype="text/plain")
+
+def update_like_count(post_id, like_count):
+    """
+    Update the like count for a specific Facebook post in ERPNext.
+    """
+    try:
+        # Check if the post exists in ERPNext
+        facebook_post = frappe.get_doc("Facebook Post", {"facebook_post_id": post_id})
+        if facebook_post:
+            # Update the like count
+            facebook_post.db_set("likes", like_count)
+            frappe.msgprint(f"Likes updated for Post ID {post_id}: {like_count}")
+    except frappe.DoesNotExistError:
+        frappe.log_error(message=f"Facebook Post with ID {post_id} not found.", title="Facebook Webhook Error")

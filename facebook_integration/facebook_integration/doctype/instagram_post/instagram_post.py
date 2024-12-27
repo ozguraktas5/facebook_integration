@@ -109,7 +109,7 @@ def delete_instagram_post(instagram_post_id):
         frappe.throw("Instagram API credentials are missing!")
 
     # Instagram Graph API endpoint for deleting a post
-    url = f"https://graph.facebook.com/v17.0/{instagram_post_id}"
+    url = f"https://graph.facebook.com/v21.0/{instagram_post_id}"
 
     # Make the DELETE request to Instagram API
     response = requests.delete(url, params={"access_token": access_token})
