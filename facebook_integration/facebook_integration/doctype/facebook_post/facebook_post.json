@@ -10,7 +10,6 @@
   "post_date",
   "post_content",
   "column_break_mwhc",
-  "platform",
   "facebook_post_id",
   "amended_from",
   "attachment"
@@ -36,12 +35,6 @@
    "fieldtype": "Select",
    "label": "Status",
    "options": "\nDraft\nPublished\nDeleted"
-  },
-  {
-   "fieldname": "platform",
-   "fieldtype": "Select",
-   "label": "Platform",
-   "options": "\nFacebook"
   },
   {
    "fieldname": "column_break_mwhc",
@@ -71,7 +64,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-12-26 19:41:39.989021",
+ "modified": "2024-12-27 10:35:00.344331",
  "modified_by": "Administrator",
  "module": "Facebook Integration",
  "name": "Facebook Post",

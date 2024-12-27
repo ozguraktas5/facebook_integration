@@ -1,0 +1,47 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-12-27 11:51:23.322924",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "instagram_api_access_token",
+  "instagram_account_id"
+ ],
+ "fields": [
+  {
+   "fieldname": "instagram_account_id",
+   "fieldtype": "Data",
+   "label": "Instagram Account ID"
+  },
+  {
+   "fieldname": "instagram_api_access_token",
+   "fieldtype": "Data",
+   "label": "Instagram API Access Token",
+   "length": 270
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2024-12-27 12:42:23.176223",
+ "modified_by": "Administrator",
+ "module": "Facebook Integration",
+ "name": "Instagram Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

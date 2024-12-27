@@ -248,6 +248,9 @@ app_license = "mit"
 doc_events = {
     "Facebook Post": {
         "after_insert": "facebook_integration.facebook_integration.doctype.facebook_post.facebook_post.publish_to_facebook"
+    },
+    "Instagram Post": {
+        "after_insert": "facebook_integration.facebook_integration.doctype.instagram_post.instagram_post.publish_to_instagram"
     }
 }
 

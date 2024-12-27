@@ -1,0 +1,78 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-12-27 10:27:45.375822",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "instagram_post_title",
+  "instagram_status",
+  "instagram_post_date",
+  "instagram_post_content",
+  "column_break_qblz",
+  "instagram_post_id",
+  "attachment"
+ ],
+ "fields": [
+  {
+   "fieldname": "instagram_post_title",
+   "fieldtype": "Data",
+   "label": "Instagram Post Title"
+  },
+  {
+   "fieldname": "instagram_status",
+   "fieldtype": "Select",
+   "label": "Instagram Status",
+   "options": "\nDraft\nPublished\nDeleted"
+  },
+  {
+   "fieldname": "instagram_post_date",
+   "fieldtype": "Date",
+   "label": "Instagram Post Date"
+  },
+  {
+   "fieldname": "instagram_post_content",
+   "fieldtype": "Text Editor",
+   "label": "Instagram Post Content"
+  },
+  {
+   "fieldname": "instagram_post_id",
+   "fieldtype": "Data",
+   "label": "Instagram Post ID",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_qblz",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "attachment",
+   "fieldtype": "Attach",
+   "label": "Attachment"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2024-12-27 10:36:53.261978",
+ "modified_by": "Administrator",
+ "module": "Facebook Integration",
+ "name": "Instagram Post",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}
