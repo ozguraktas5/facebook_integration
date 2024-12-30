@@ -254,3 +254,14 @@ doc_events = {
     }
 }
 
+scheduler_events = {
+    "cron": {
+        "*/5 * * * *": [
+            "facebook_integration.facebook_integration.doctype.facebook_post.facebook_post.update_facebook_likes"
+        ]
+    }
+}
+
+
+
+
