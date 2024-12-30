@@ -200,3 +200,64 @@ def update_facebook_likes():
                 message=f"Hata: {str(e)} - Post ID: {facebook_post_id}",
                 title="Facebook Likes Update Error"
             )
+
+def update_facebook_comments():
+    """
+    Facebook gönderilerine ait yorumları ERPNext'e kaydeder.
+    """
+    access_token = "EAAR3ax0DANEBOzsSckzuqp0kGx8WpsrbXZAp74AyGPuRXmJRK9b2noiAr4HYMfDM6z09fR3elN2Xx7ZAOOJEu3FAeZBP1TI1BPnrWB4LstkZC3ldnv6RKvwuGyBbVD63GmcI1EcBBxakhe94o26gkDshZAZBLjURP4JKeatHGWGq8jnico4tNrgpi9Uqt6LwZDZD"
+
+    # ERPNext'teki tüm Facebook Post kayıtlarını al
+    facebook_posts = frappe.get_all("Facebook Post", fields=["name", "facebook_post_id", "post_content"])
+
+    for post in facebook_posts:
+        facebook_post_id = post.get("facebook_post_id")
+
+        # ID eksikse atla
+        if not facebook_post_id:
+            frappe.log_error(
+                message=f"Facebook Post ID eksik: {post['name']}",
+                title="Facebook Comments Update Error"
+            )
+            continue
+
+        try:
+            # Facebook Graph API'den yorumları al
+            url = f"https://graph.facebook.com/v14.0/{facebook_post_id}/comments?access_token={access_token}"
+            response = requests.get(url)
+            response_data = response.json()
+
+            if "error" in response_data:
+                frappe.log_error(
+                    message=f"Facebook API Hatası: {response_data['error']['message']}",
+                    title="Facebook API Error"
+                )
+                continue
+
+            # Yorumları birleştir
+            comments_content = ""
+            for comment in response_data.get("data", []):
+                comment_message = comment.get("message", "")
+                author_name = comment.get("from", {}).get("name", "Bilinmeyen")
+                created_time = comment.get("created_time", "Bilinmeyen Tarih")
+
+                # Yorum detaylarını birleştir
+                comments_content += f"Yorum: {comment_message}\nYazan: {author_name}\nTarih: {created_time}\n\n"
+
+            # ERPNext'teki ilgili Facebook Post kaydını güncelle
+            doc = frappe.get_doc("Facebook Post", post["name"])
+            doc.post_content = comments_content
+            doc.save()
+            frappe.db.commit()
+
+            # Başarı logu
+            frappe.log_error(
+                message=f"Post ID: {facebook_post_id} için yorumlar başarıyla güncellendi.",
+                title="Facebook Comments Update"
+            )
+
+        except Exception as e:
+            frappe.log_error(
+                message=f"Hata: {str(e)} - Post ID: {facebook_post_id}",
+                title="Facebook Comments Update Error"
+            )

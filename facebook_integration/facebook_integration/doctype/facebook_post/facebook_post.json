@@ -71,7 +71,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-12-27 19:53:14.061488",
+ "modified": "2024-12-30 17:36:30.916561",
  "modified_by": "Administrator",
  "module": "Facebook Integration",
  "name": "Facebook Post",
@@ -93,5 +93,6 @@
  "sort_field": "creation",
  "sort_order": "DESC",
  "states": [],
+ "title_field": "post_title",
  "track_changes": 1
 }
