@@ -127,28 +127,20 @@ def publish_to_instagram(doc, method):
     relative_media_path = os.path.relpath(media_path, frappe.utils.get_site_path("public"))
     media_url = f"{site_url}/{relative_media_path}"
 
-    # Media URL loglama
-    frappe.log_error(message=f"Media URL: {media_url}", title="Media URL Debug")
-    frappe.log_error(message=f"Resolved Media Path: {media_path}", title="Media Path Debug")
-    frappe.log_error(message=f"Generated Media URL: {media_url}", title="Media URL Debug")
-
-
     # Instagram'a medya yükle
     upload_url = f"https://graph.facebook.com/v21.0/{instagram_account_id}/media"
 
     # Medya türüne göre payload oluştur
-    if media_path.strip().lower().endswith(".mp4"):
+    if media_path.lower().endswith(".mp4"):
+        frappe.log_error(message="Detected as video file.", title="Media Type Debug")
         upload_payload = {
-            "video_url": media_url,
-            "caption": instagram_post_content,
-            "access_token": access_token,
+            "video_url": media_url,  # Sadece video için URL
+            "caption": instagram_post_content,  # Gönderi içeriği
+            "access_token": access_token,  # API erişim anahtarı
         }
     else:
-        upload_payload = {
-            "image_url": media_url,
-            "caption": instagram_post_content,
-            "access_token": access_token,
-        }
+        frappe.throw("Only video files are supported. Please upload an MP4 file.")
+
 
     frappe.log_error(
         message=f"Upload Payload: {upload_payload}",
@@ -171,22 +163,14 @@ def publish_to_instagram(doc, method):
 
         if publish_response.status_code == 200:
             publish_result = publish_response.json()
-            frappe.msgprint(f"Instagram Post Published. Post ID: {publish_result.get('id')}")
+            frappe.msgprint(f"Video successfully published to Instagram. Post ID: {publish_result.get('id')}")
             doc.db_set("instagram_post_id", publish_result.get("id"))
-            doc.db_set("instagram_status", "Published")  # Update the status to Published
+            doc.db_set("instagram_status", "Published")
         else:
             error_message = publish_response.json().get("error", {}).get("message", "Unknown error")
-            frappe.log_error(
-                message=f"Instagram Publish Error: {error_message}",
-                title="Instagram API Error"
-            )
-            frappe.throw(f"Error Publishing Post: {error_message}")
+            frappe.throw(f"Error Publishing Video: {error_message}")
     else:
         error_message = upload_response.json().get("error", {}).get("message", "Unknown error")
-        frappe.log_error(
-            message=f"Instagram Upload Error: {error_message}",
-            title="Instagram API Error"
-        )
         frappe.throw(f"Error Uploading Media: {error_message}")
 
 @frappe.whitelist()
