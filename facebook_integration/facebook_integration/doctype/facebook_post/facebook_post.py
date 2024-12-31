@@ -9,6 +9,7 @@ from werkzeug.wrappers import Response
 from frappe.model.document import Document
 from frappe.utils import get_url
 from bs4 import BeautifulSoup
+from datetime import datetime, timedelta
 
 class FacebookPost(Document):
     pass
@@ -241,12 +242,20 @@ def update_facebook_comments():
                 author_name = comment.get("from", {}).get("name", "Bilinmeyen")
                 created_time = comment.get("created_time", "Bilinmeyen Tarih")
 
+                # Tarihi "gün-ay-yıl saat" formatına dönüştür
+                if created_time != "Bilinmeyen Tarih":
+                    created_time = datetime.strptime(created_time, "%Y-%m-%dT%H:%M:%S+0000")
+                    local_time = created_time + timedelta(hours=3)  # UTC+3
+                    formatted_time = local_time.strftime("%d-%m-%Y %H:%M:%S")
+                else:
+                    formatted_time = created_time
+
                 # Yorum detaylarını birleştir
-                comments_content += f"Yorum: {comment_message}\nYazan: {author_name}\nTarih: {created_time}\n\n"
+                comments_content += f"<p><strong>Yorum:</strong> {comment_message}<br><strong>Yazan:</strong> {author_name}<br><strong>Tarih:</strong> {formatted_time}</p><br><br>"
 
             # ERPNext'teki ilgili Facebook Post kaydını güncelle
             doc = frappe.get_doc("Facebook Post", post["name"])
-            doc.post_content = comments_content
+            doc.post_content = comments_content.strip()
             doc.save()
             frappe.db.commit()
 
