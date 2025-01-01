@@ -11,7 +11,8 @@
   "instagram_post_content",
   "column_break_qblz",
   "instagram_post_id",
-  "attachment"
+  "attachment",
+  "likes"
  ],
  "fields": [
   {
@@ -49,11 +50,16 @@
    "fieldname": "attachment",
    "fieldtype": "Attach",
    "label": "Attachment"
+  },
+  {
+   "fieldname": "likes",
+   "fieldtype": "Int",
+   "label": "Likes"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-12-31 11:52:10.402367",
+ "modified": "2025-01-01 13:33:20.254322",
  "modified_by": "Administrator",
  "module": "Facebook Integration",
  "name": "Instagram Post",

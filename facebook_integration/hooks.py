@@ -257,10 +257,9 @@ doc_events = {
 scheduler_events = {
     "cron": {
         "*/5 * * * *": [
-            "facebook_integration.facebook_integration.doctype.facebook_post.facebook_post.update_facebook_likes"
-        ],
-        "*/5 * * * *": [
-            "facebook_integration.facebook_integration.doctype.facebook_post.facebook_post.update_facebook_comments"
+            "facebook_integration.facebook_integration.doctype.facebook_post.facebook_post.update_facebook_likes",
+            "facebook_integration.facebook_integration.doctype.facebook_post.facebook_post.update_facebook_comments",
+            "facebook_integration.facebook_integration.doctype.instagram_post.instagram_post.update_instagram_likes"
         ]
     }
 }
