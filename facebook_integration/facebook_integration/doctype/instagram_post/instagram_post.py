@@ -8,6 +8,7 @@ import frappe
 from frappe.model.document import Document
 from frappe.utils import get_url
 from bs4 import BeautifulSoup
+from datetime import datetime, timedelta
 
 
 class InstagramPost(Document):
@@ -206,4 +207,78 @@ def update_instagram_likes():
             frappe.log_error(
                 message=f"Hata: {str(e)} - Post ID: {instagram_post_id}",
                 title="Instagram Likes Update Error"
+            )
+
+def update_instagram_comments():
+    """
+    Instagram gönderilerine ait yorumları ERPNext'e kaydeder.
+    """
+    # Instagram API erişim tokenini al
+    access_token = frappe.db.get_single_value("Instagram Settings", "instagram_api_access_token")
+
+    if not access_token:
+        frappe.throw("Instagram API erişim bilgileri eksik!")
+
+    # ERPNext'teki tüm Instagram Post kayıtlarını al
+    instagram_posts = frappe.get_all("Instagram Post", fields=["name", "instagram_post_id", "instagram_post_content"])
+
+    for post in instagram_posts:
+        instagram_post_id = post.get("instagram_post_id")
+
+        # ID eksikse atla
+        if not instagram_post_id:
+            frappe.log_error(
+                message=f"Instagram Post ID eksik: {post['name']}",
+                title="Instagram Comments Update Error"
+            )
+            continue
+
+        try:
+            # Instagram Graph API'den yorumları al
+            url = f"https://graph.facebook.com/v14.0/{instagram_post_id}/comments?access_token={access_token}"
+            response = requests.get(url)
+            response_data = response.json()
+
+            # API'den hata dönerse logla ve devam et
+            if "error" in response_data:
+                frappe.log_error(
+                    message=f"Instagram API Hatası: {response_data['error']['message']}",
+                    title="Instagram API Error"
+                )
+                continue
+
+            # Yorumları birleştir
+            comments_content = ""
+            for comment in response_data.get("data", []):
+                comment_message = comment.get("text", "")  # "message" yerine "text"
+                comment_id = comment.get("id", "Bilinmeyen ID")
+                created_time = comment.get("timestamp", "Bilinmeyen Tarih")  # "created_time" yerine "timestamp"
+
+                # Tarihi "gün-ay-yıl saat" formatına dönüştür
+                if created_time != "Bilinmeyen Tarih":
+                    created_time = datetime.strptime(created_time, "%Y-%m-%dT%H:%M:%S+0000")
+                    local_time = created_time + timedelta(hours=3)  # UTC+3
+                    formatted_time = local_time.strftime("%d-%m-%Y %H:%M:%S")
+                else:
+                    formatted_time = created_time
+
+                # Yorum detaylarını birleştir
+                comments_content += f"<p><strong>Yorum:</strong> {comment_message}<br><strong>ID:</strong> {comment_id}<br><strong>Tarih:</strong> {formatted_time}</p><br><br>"
+
+            # ERPNext'teki ilgili Instagram Post kaydını güncelle
+            doc = frappe.get_doc("Instagram Post", post["name"])
+            doc.instagram_post_content = comments_content.strip()
+            doc.save()
+            frappe.db.commit()
+
+            # Başarı logu
+            frappe.log_error(
+                message=f"Post ID: {instagram_post_id} için yorumlar başarıyla güncellendi.",
+                title="Instagram Comments Update"
+            )
+
+        except Exception as e:
+            frappe.log_error(
+                message=f"Hata: {str(e)} - Post ID: {instagram_post_id}",
+                title="Instagram Comments Update Error"
             )
