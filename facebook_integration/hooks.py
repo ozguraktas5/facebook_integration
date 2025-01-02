@@ -251,6 +251,9 @@ doc_events = {
     },
     "Instagram Post": {
         "after_insert": "facebook_integration.facebook_integration.doctype.instagram_post.instagram_post.publish_to_instagram"
+    },
+    "Linkedin Post": {
+        "after_insert": "facebook_integration.facebook_integration.doctype.linkedin_post.linkedin_post.publish_to_linkedin"
     }
 }
 

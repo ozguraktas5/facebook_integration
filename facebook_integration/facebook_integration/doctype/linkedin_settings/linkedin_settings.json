@@ -1,0 +1,47 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-01-02 10:52:52.561247",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "linkedin_access_token",
+  "linkedin_person_urn"
+ ],
+ "fields": [
+  {
+   "fieldname": "linkedin_access_token",
+   "fieldtype": "Data",
+   "label": "Linkedin Access Token",
+   "length": 270
+  },
+  {
+   "fieldname": "linkedin_person_urn",
+   "fieldtype": "Data",
+   "label": "Linkedin Person URN"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2025-01-02 13:58:22.613687",
+ "modified_by": "Administrator",
+ "module": "Facebook Integration",
+ "name": "Linkedin Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

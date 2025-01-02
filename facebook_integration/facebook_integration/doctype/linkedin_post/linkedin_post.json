@@ -1,0 +1,83 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-01-02 10:58:35.586164",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "linkedin_post_title",
+  "linkedin_status",
+  "linkedin_post_date",
+  "linkedin_post_content",
+  "column_break_qaba",
+  "linkedin_post_id",
+  "attachment",
+  "likes"
+ ],
+ "fields": [
+  {
+   "fieldname": "linkedin_post_title",
+   "fieldtype": "Data",
+   "label": "Linkedin Post Title"
+  },
+  {
+   "fieldname": "linkedin_status",
+   "fieldtype": "Select",
+   "label": "Linkedin Status",
+   "options": "\nDraft\nPublished\nDeleted"
+  },
+  {
+   "fieldname": "linkedin_post_date",
+   "fieldtype": "Date",
+   "label": "Linkedin Post Date"
+  },
+  {
+   "fieldname": "linkedin_post_content",
+   "fieldtype": "Text Editor",
+   "label": "Linkedin Post Content"
+  },
+  {
+   "fieldname": "linkedin_post_id",
+   "fieldtype": "Data",
+   "label": "Linkedin Post ID"
+  },
+  {
+   "fieldname": "column_break_qaba",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "attachment",
+   "fieldtype": "Attach",
+   "label": "Attachment"
+  },
+  {
+   "fieldname": "likes",
+   "fieldtype": "Int",
+   "label": "Likes"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-01-02 12:06:11.224813",
+ "modified_by": "Administrator",
+ "module": "Facebook Integration",
+ "name": "Linkedin Post",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}
