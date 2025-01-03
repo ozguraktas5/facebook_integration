@@ -1,4 +1,5 @@
 import frappe
+import os
 from frappe.model.document import Document
 import requests
 from bs4 import BeautifulSoup
@@ -25,37 +26,182 @@ def get_dynamic_ngrok_url():
         frappe.throw(f"Failed to fetch ngrok URL: {str(e)}")
 
 
-def upload_image_to_linkedin(upload_url, image_path, access_token):
+# def upload_image_to_linkedin(upload_url, image_path, access_token):
+#     """
+#     LinkedIn uploadUrl kullanarak resmi yükler.
+#     """
+#     try:
+#         headers = {
+#                 "Authorization": f"Bearer {access_token}",
+#                 "Content-Type": "application/octet-stream"  # Binary dosya yüklemesi için
+#             }
+
+#         # Resim dosyasını binary formatında aç
+#         with open(image_path, "rb") as image_file:
+#             # PUT isteği ile resmi yükle
+#             response = requests.put(upload_url, headers=headers, data=image_file)
+
+#         # Yanıtı kontrol et
+#         if response.status_code == 201:
+#             print("Resim başarıyla yüklendi!")
+#             return True
+#         else:
+#             print(f"Resim yükleme başarısız oldu: {response.status_code}")
+#             print(f"LinkedIn API Hatası: {response.text}")
+#             return False
+
+#     except Exception as e:
+#         print(f"Bir hata oluştu: {str(e)}")
+#         return False
+
+def upload_media_to_linkedin(upload_url, file_path, access_token):
     """
-    LinkedIn uploadUrl kullanarak resmi yükler.
+    LinkedIn uploadUrl kullanarak medya (resim/video) yükler.
     """
     try:
-        # Resim dosyasını binary formatında aç
-        with open(image_path, "rb") as image_file:
-            headers = {
-                "Authorization": f"Bearer {access_token}",
-                "Content-Type": "application/octet-stream"  # Binary dosya yüklemesi için
-            }
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/octet-stream"  # Binary dosya yüklemesi için
+        }
 
-            # PUT isteği ile resmi yükle
-            response = requests.put(upload_url, headers=headers, data=image_file)
+        # Dosyayı binary formatında aç
+        with open(file_path, "rb") as file:
+            # PUT isteği ile medya yükle
+            response = requests.put(upload_url, headers=headers, data=file)
 
-            # Yanıtı kontrol et
-            if response.status_code == 201:
-                print("Resim başarıyla yüklendi!")
-                return True
-            else:
-                print(f"Resim yükleme başarısız oldu: {response.status_code}, {response.text}")
-                return False
+        # Yanıtı kontrol et
+        if response.status_code == 201:
+            print("Medya başarıyla yüklendi!")
+            return True
+        else:
+            print(f"Medya yükleme başarısız oldu: {response.status_code}")
+            print(f"LinkedIn API Hatası: {response.text}")
+            return False
 
     except Exception as e:
         print(f"Bir hata oluştu: {str(e)}")
         return False
 
+# def publish_to_linkedin(doc, method):
+#     """
+#     Publish a post to LinkedIn with media support.
+#     """
+#     # LinkedIn API bilgilerini al
+#     access_token = frappe.db.get_single_value("Linkedin Settings", "linkedin_access_token")
+#     person_urn = frappe.db.get_single_value("Linkedin Settings", "linkedin_person_urn")
+#     media_upload_endpoint = "https://api.linkedin.com/v2/assets?action=registerUpload"
+
+#     if not access_token or not person_urn:
+#         frappe.throw("LinkedIn API credentials are missing!")
+
+#     # Post içeriğini HTML'den düz metne çevir
+#     html_content = doc.linkedin_post_content or ""
+#     soup = BeautifulSoup(html_content, "html.parser")
+#     linkedin_post_content = soup.get_text().strip()
+
+#     if not linkedin_post_content:
+#         frappe.throw("Post content cannot be empty!")
+
+#     # Medya dosyasını kontrol et ve LinkedIn'e yükle
+#     media_urn = None
+#     if doc.attachment:
+#         # Dosya yolunu doğru şekilde oluştur
+#         attachment_file_name = doc.attachment.replace("/files/", "")
+#         file_path = frappe.get_site_path("public", "files", attachment_file_name)
+#         site_url = frappe.utils.get_url()
+#         attachment_url = f"{site_url}/files/{attachment_file_name}"
+
+#         print(f"Attachment URL: {attachment_url}")
+#         print(f"Resolved file path: {file_path}")
+
+#         # Dosyanın mevcut olup olmadığını kontrol et
+#         import os
+#         if not os.path.exists(file_path):
+#             frappe.throw(f"File not found at path: {file_path}")
+
+#         # Medya yükleme için payload ve header
+#         upload_headers = {
+#             "Authorization": f"Bearer {access_token}",
+#             "Content-Type": "application/json",
+#             "X-Restli-Protocol-Version": "2.0.0"
+#         }
+#         upload_payload = {
+#             "registerUploadRequest": {
+#                 "owner": person_urn,
+#                 "recipes": ["urn:li:digitalmediaRecipe:feedshare-image"],
+#                 "serviceRelationships": [{
+#                     "relationshipType": "OWNER",
+#                     "identifier": "urn:li:userGeneratedContent"
+#                 }]
+#             }
+#         }
+
+#         # Medyayı yükleme isteği
+#         upload_response = requests.post(media_upload_endpoint, headers=upload_headers, json=upload_payload)
+
+#         if upload_response.status_code == 200:
+#             upload_result = upload_response.json()
+#             print("Upload result", upload_result)
+#             upload_url = upload_result["value"]["uploadMechanism"]["com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest"]["uploadUrl"]
+#             print("Upload URL:", upload_url)
+#             media_urn = upload_result.get("value", {}).get("asset")
+#             print("Media URN:", media_urn)
+
+#             # LinkedIn'e yükleme işlemi
+#             if not upload_image_to_linkedin(upload_url, file_path, access_token):
+#                 frappe.throw("Failed to upload image to LinkedIn.")
+
+#         else:
+#             error_message = upload_response.json().get("message", "Unknown error")
+#             frappe.throw(f"Error Uploading Media to LinkedIn: {error_message}")
+
+#     # Gönderi için payload oluştur
+#     payload = {
+#         "author": person_urn,
+#         "lifecycleState": "PUBLISHED",
+#         "specificContent": {
+#             "com.linkedin.ugc.ShareContent": {
+#                 "shareCommentary": {
+#                     "text": linkedin_post_content
+#                 },
+#                 "shareMediaCategory": "NONE" if not media_urn else "IMAGE",
+#                 "media": [] if not media_urn else [
+#                     {
+#                         "status": "READY",
+#                         "media": media_urn
+#                     }
+#                 ]
+#             }
+#         },
+#         "visibility": {
+#             "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"
+#         }
+#     }
+
+#     # LinkedIn API çağrısı
+#     headers = {
+#         "Authorization": f"Bearer {access_token}",
+#         "Content-Type": "application/json",
+#         "X-Restli-Protocol-Version": "2.0.0"
+#     }
+
+#     response = requests.post("https://api.linkedin.com/v2/ugcPosts", headers=headers, json=payload)
+
+#     # Yanıtı işle
+#     if response.status_code == 201:
+#         data = response.json()
+#         frappe.msgprint(f"LinkedIn Post Published. Post ID: {data.get('id')}")
+#         doc.db_set("linkedin_post_id", data.get("id"))
+#         doc.db_set("linkedin_status", "Published")
+#     else:
+#         error_message = response.json().get("message", "Unknown error")
+#         frappe.log_error(message=f"LinkedIn API Error: {error_message}", title="LinkedIn API Error")
+#         doc.db_set("linkedin_status", "Failed")
+#         frappe.throw(f"Error Publishing Post: {error_message}")
 
 def publish_to_linkedin(doc, method):
     """
-    Publish a post to LinkedIn with media support.
+    Publish a post to LinkedIn with media (image/video) support.
     """
     # LinkedIn API bilgilerini al
     access_token = frappe.db.get_single_value("Linkedin Settings", "linkedin_access_token")
@@ -76,10 +222,22 @@ def publish_to_linkedin(doc, method):
     # Medya dosyasını kontrol et ve LinkedIn'e yükle
     media_urn = None
     if doc.attachment:
+        # Dosya yolunu doğru şekilde oluştur
+        attachment_file_name = doc.attachment.replace("/files/", "")
+        file_path = frappe.get_site_path("public", "files", attachment_file_name)
         site_url = frappe.utils.get_url()
-        attachment_url = f"{site_url}/files/{doc.attachment}"
-        
+        attachment_url = f"{site_url}/files/{attachment_file_name}"
 
+        print(f"Attachment URL: {attachment_url}")
+        print(f"Resolved file path: {file_path}")
+
+        # Dosyanın mevcut olup olmadığını kontrol et
+        import os
+        if not os.path.exists(file_path):
+            frappe.throw(f"File not found at path: {file_path}")
+
+        # Medya türünü belirle
+        media_type = "urn:li:digitalmediaRecipe:feedshare-video" if file_path.endswith(('.mp4', '.mov')) else "urn:li:digitalmediaRecipe:feedshare-image"
 
         # Medya yükleme için payload ve header
         upload_headers = {
@@ -90,7 +248,7 @@ def publish_to_linkedin(doc, method):
         upload_payload = {
             "registerUploadRequest": {
                 "owner": person_urn,
-                "recipes": ["urn:li:digitalmediaRecipe:feedshare-image"],
+                "recipes": [media_type],
                 "serviceRelationships": [{
                     "relationshipType": "OWNER",
                     "identifier": "urn:li:userGeneratedContent"
@@ -103,11 +261,15 @@ def publish_to_linkedin(doc, method):
 
         if upload_response.status_code == 200:
             upload_result = upload_response.json()
+            print("Upload result", upload_result)
             upload_url = upload_result["value"]["uploadMechanism"]["com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest"]["uploadUrl"]
+            print("Upload URL:", upload_url)
             media_urn = upload_result.get("value", {}).get("asset")
+            print("Media URN:", media_urn)
 
-            if not upload_image_to_linkedin(upload_url, frappe.get_site_path("public", doc.attachment), access_token):
-                frappe.throw("Failed to upload image to LinkedIn.")
+            # LinkedIn'e yükleme işlemi
+            if not upload_media_to_linkedin(upload_url, file_path, access_token):
+                frappe.throw("Failed to upload media to LinkedIn.")
 
         else:
             error_message = upload_response.json().get("message", "Unknown error")
@@ -122,7 +284,7 @@ def publish_to_linkedin(doc, method):
                 "shareCommentary": {
                     "text": linkedin_post_content
                 },
-                "shareMediaCategory": "NONE" if not media_urn else "IMAGE",
+                "shareMediaCategory": "NONE" if not media_urn else ("VIDEO" if file_path.endswith(('.mp4', '.mov')) else "IMAGE"),
                 "media": [] if not media_urn else [
                     {
                         "status": "READY",
@@ -156,3 +318,41 @@ def publish_to_linkedin(doc, method):
         frappe.log_error(message=f"LinkedIn API Error: {error_message}", title="LinkedIn API Error")
         doc.db_set("linkedin_status", "Failed")
         frappe.throw(f"Error Publishing Post: {error_message}")
+
+@frappe.whitelist()
+def delete_linkedin_post(linkedin_post_id):
+    """
+    Delete a post from LinkedIn using the DELETE method.
+    """
+    access_token = frappe.db.get_single_value("Linkedin Settings", "linkedin_access_token")
+
+    if not access_token:
+        frappe.throw("LinkedIn API credentials are missing!")
+
+    # `linkedin_post_id`'yi doğru formatla
+    if linkedin_post_id.startswith("urn:li:share:"):
+        linkedin_post_id = linkedin_post_id.split(":")[-1]
+
+    # LinkedIn API URL
+    url = f"https://api.linkedin.com/v2/shares/{linkedin_post_id}"
+
+    # API request headers
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+    }
+
+    # DELETE isteği gönder
+    response = requests.delete(url, headers=headers)
+
+    if response.status_code == 204:
+        frappe.msgprint("LinkedIn post deleted successfully!")
+        return "success"
+    else:
+        # Extract and log error message
+        error_message = response.json().get("message", "Unknown error")
+        error_details = response.json()  # Full API response
+        frappe.log_error(message=f"LinkedIn API Error: {error_details}", title="LinkedIn API Error")
+        frappe.throw(f"Error Deleting LinkedIn Post: {error_message}")
+
+
+
