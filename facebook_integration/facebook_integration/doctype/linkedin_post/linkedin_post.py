@@ -319,40 +319,150 @@ def publish_to_linkedin(doc, method):
         doc.db_set("linkedin_status", "Failed")
         frappe.throw(f"Error Publishing Post: {error_message}")
 
+# @frappe.whitelist()
+# def delete_linkedin_post(linkedin_post_id):
+#     """
+#     Delete a post from LinkedIn using the DELETE method.
+#     """
+#     access_token = frappe.db.get_single_value("Linkedin Settings", "linkedin_access_token")
+
+#     if not access_token:
+#         frappe.throw("LinkedIn API credentials are missing!")
+
+#     # `linkedin_post_id`'yi doğru formatla
+#     if linkedin_post_id.startswith("urn:li:share:"):
+#         linkedin_post_id = linkedin_post_id.split(":")[-1]
+
+#     # LinkedIn API URL
+#     url = f"https://api.linkedin.com/v2/shares/{linkedin_post_id}"
+
+#     # API request headers
+#     headers = {
+#         "Authorization": f"Bearer {access_token}",
+#     }
+
+#     # DELETE isteği gönder
+#     response = requests.delete(url, headers=headers)
+
+#     # Yanıtı kontrol et
+#     if response.status_code == 204:  # Başarılı silme işlemi
+#         frappe.msgprint("LinkedIn post deleted successfully!")
+#         return "success"
+#     else:  # Hatalı durum veya başka durum kodları
+#         try:
+#             # Yanıtı JSON olarak işleme
+#             response_data = response.json()
+#             error_message = response_data.get("message", "Unknown error")
+#         except Exception:
+#             # JSON dışı yanıtı yakala ve yazdır
+#             print(f"Raw response text: {response.text}")  # Konsola yazdır
+#             frappe.log_error(message=f"Raw response text: {response.text}", title="LinkedIn API Raw Response")
+#             error_message = response.text or "No response body returned from LinkedIn API."
+
+#         frappe.log_error(message=f"LinkedIn API Error: {error_message}", title="LinkedIn API Error")
+#         frappe.throw(f"Error Deleting LinkedIn Post: {error_message}")
+
 @frappe.whitelist()
 def delete_linkedin_post(linkedin_post_id):
     """
-    Delete a post from LinkedIn using the DELETE method.
+    Mark a LinkedIn post as DELETED by updating its lifecycleState.
     """
     access_token = frappe.db.get_single_value("Linkedin Settings", "linkedin_access_token")
 
     if not access_token:
         frappe.throw("LinkedIn API credentials are missing!")
 
-    # `linkedin_post_id`'yi doğru formatla
-    if linkedin_post_id.startswith("urn:li:share:"):
+    # URN türünü kontrol et
+    if linkedin_post_id.startswith("urn:li:ugcPost:"):
+        endpoint = "ugcPosts"
         linkedin_post_id = linkedin_post_id.split(":")[-1]
+    elif linkedin_post_id.startswith("urn:li:share:"):
+        endpoint = "shares"
+        linkedin_post_id = linkedin_post_id.split(":")[-1]
+    else:
+        frappe.throw("Invalid LinkedIn Post ID format. Expected 'urn:li:share:<id>' or 'urn:li:ugcPost:<id>'.")
 
     # LinkedIn API URL
-    url = f"https://api.linkedin.com/v2/shares/{linkedin_post_id}"
+    url = f"https://api.linkedin.com/v2/{endpoint}/{linkedin_post_id}"
 
     # API request headers
     headers = {
         "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json",
+        "X-Restli-Protocol-Version": "2.0.0"
     }
 
-    # DELETE isteği gönder
-    response = requests.delete(url, headers=headers)
+    # Eğer ugcPost ise varsayımsal version değeri ile lifecycleState güncellemesi
+    if endpoint == "ugcPosts":
+        # Varsayımsal version değeri
+        version = 1  # Varsayımsal olarak 0 veya 1 deneyin
+        payload = {
+            "lifecycleState": "DELETED",
+            "version": version
+        }
 
-    if response.status_code == 204:
+        # Güncelleme isteği gönder
+        response = requests.post(url, headers=headers, json=payload)
+    else:
+        # Share için DELETE isteği
+        response = requests.delete(url, headers=headers)
+
+    # Yanıtı kontrol et
+    if response.status_code in [200, 204]:  # Başarılı durum kodları
         frappe.msgprint("LinkedIn post deleted successfully!")
         return "success"
     else:
-        # Extract and log error message
-        error_message = response.json().get("message", "Unknown error")
-        error_details = response.json()  # Full API response
-        frappe.log_error(message=f"LinkedIn API Error: {error_details}", title="LinkedIn API Error")
+        try:
+            # Hata mesajını JSON'dan çıkar
+            response_data = response.json()
+            error_message = response_data.get("message", "Unknown error")
+        except Exception:
+            # JSON dışı veya boş yanıtı işleme
+            error_message = response.text or "No response body returned from LinkedIn API."
+
+        frappe.log_error(message=f"LinkedIn API Error: {error_message}", title="LinkedIn API Error")
         frappe.throw(f"Error Deleting LinkedIn Post: {error_message}")
+
+@frappe.whitelist()
+def update_likes_count(linkedin_post_id):
+    """
+    Update the likes count of a LinkedIn post in ERPNext.
+    """
+    # LinkedIn API Access Token
+    access_token = frappe.db.get_single_value("Linkedin Settings", "linkedin_access_token")
+
+    if not access_token:
+        frappe.throw("LinkedIn API credentials are missing!")
+
+    # LinkedIn API Endpoint
+    url = f"https://api.linkedin.com/v2/socialMetadata/{linkedin_post_id}"
+
+    # API Request Headers
+    headers = {
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json",
+        "X-Restli-Protocol-Version": "2.0.0"
+    }
+
+    # API Request
+    response = requests.get(url, headers=headers)
+
+    # Yanıtı kontrol et
+    if response.status_code == 200:
+        data = response.json()
+        likes_count = data["elements"][0]["totalSocialActivityCounts"]["numLikes"]
+
+        # ERPNext'teki `LinkedinPost` Doctype'ını güncelle
+        linkedin_post = frappe.get_doc("Linkedin Post", {"linkedin_post_id": linkedin_post_id})
+        linkedin_post.likes = likes_count
+        linkedin_post.save()
+
+        frappe.msgprint(f"Likes count updated: {likes_count}")
+        return likes_count
+    else:
+        error_message = response.json().get("message", "Unknown error")
+        frappe.log_error(message=f"LinkedIn API Error: {error_message}", title="LinkedIn API Error")
+        frappe.throw(f"Error Updating Likes Count: {error_message}")
 
 
 

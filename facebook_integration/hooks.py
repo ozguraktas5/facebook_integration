@@ -270,7 +270,11 @@ scheduler_events = {
         ],
         "*/20 * * * *": [
             "facebook_integration.facebook_integration.doctype.instagram_post.instagram_post.update_instagram_comments",
-        ]
+        ],
+        "*/25 * * * *": [
+            "facebook_integration.facebook_integration.doctype.linkedin_post.linkedin_post.update_likes_count"
+        ],
+        
     }
 }
 
