@@ -1,0 +1,85 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-01-06 12:12:58.784816",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "youtube_post_title",
+  "youtube_status",
+  "youtube_post_date",
+  "youtube_post_content",
+  "column_break_miyn",
+  "youtube_post_id",
+  "attachment",
+  "likes"
+ ],
+ "fields": [
+  {
+   "fieldname": "youtube_post_title",
+   "fieldtype": "Data",
+   "label": "Youtube Post Title"
+  },
+  {
+   "fieldname": "youtube_status",
+   "fieldtype": "Select",
+   "label": "Youtube Status",
+   "options": "\nDraft\nPublished\nDeleted"
+  },
+  {
+   "fieldname": "youtube_post_date",
+   "fieldtype": "Date",
+   "label": "Youtube Post Date"
+  },
+  {
+   "fieldname": "youtube_post_content",
+   "fieldtype": "Text Editor",
+   "label": "Youtube Post Content"
+  },
+  {
+   "fieldname": "youtube_post_id",
+   "fieldtype": "Data",
+   "label": "Youtube Post ID"
+  },
+  {
+   "fieldname": "column_break_miyn",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "attachment",
+   "fieldtype": "Attach",
+   "label": "Attachment"
+  },
+  {
+   "fieldname": "likes",
+   "fieldtype": "Int",
+   "label": "Likes"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-01-06 12:17:29.704303",
+ "modified_by": "Administrator",
+ "module": "Facebook Integration",
+ "name": "Youtube Post",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "youtube_post_title",
+ "track_changes": 1
+}
