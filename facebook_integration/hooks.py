@@ -254,6 +254,9 @@ doc_events = {
     },
     "Linkedin Post": {
         "after_insert": "facebook_integration.facebook_integration.doctype.linkedin_post.linkedin_post.publish_to_linkedin"
+    },
+    "Youtube Post": {
+        "after_insert": "facebook_integration.facebook_integration.doctype.youtube_post.youtube_post.publish_to_youtube"
     }
 }
 

@@ -10,7 +10,7 @@
   "youtube_post_date",
   "youtube_post_content",
   "column_break_miyn",
-  "youtube_post_id",
+  "youtube_video_url",
   "attachment",
   "likes"
  ],
@@ -37,11 +37,6 @@
    "label": "Youtube Post Content"
   },
   {
-   "fieldname": "youtube_post_id",
-   "fieldtype": "Data",
-   "label": "Youtube Post ID"
-  },
-  {
    "fieldname": "column_break_miyn",
    "fieldtype": "Column Break"
   },
@@ -54,11 +49,16 @@
    "fieldname": "likes",
    "fieldtype": "Int",
    "label": "Likes"
+  },
+  {
+   "fieldname": "youtube_video_url",
+   "fieldtype": "Data",
+   "label": "Youtube Video URL"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-01-06 12:17:29.704303",
+ "modified": "2025-01-06 20:00:19.026360",
  "modified_by": "Administrator",
  "module": "Facebook Integration",
  "name": "Youtube Post",
